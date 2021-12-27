@@ -277,7 +277,6 @@ pyngrok
 PyOpenGL
 pyparsing
 pyrsistent
-pysndfile
 PySocks
 pystan
 pytest
