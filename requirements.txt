@@ -202,10 +202,9 @@ pydantic==1.8.2
 pydeck==0.7.1
 pydocstyle==6.1.1
 pyerfa==2.0.0
-pyflakes==2.2.0
+pyflakes
 Pygments==2.10.0
 PyJWT==2.1.0
-pyLDAvis==3.3.1
 pylint==2.12.2
 pyls-black==0.4.6
 pyls-spyder==0.3.2
