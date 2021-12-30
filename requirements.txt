@@ -320,7 +320,7 @@ wordcloud==1.8.1
 wrapt==1.13.3
 xlrd==2.0.1
 XlsxWriter==3.0.2
-xlwings==0.24.9
+xlwings
 xlwt==1.3.0
 xmltodict==0.12.0
 yapf==0.31.0
