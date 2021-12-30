@@ -248,7 +248,7 @@ Send2Trash==1.8.0
 setuptools==60.1.0
 simplegeneric==0.8.1
 singledispatch==3.7.0
-sip==4.19.13
+sip
 six==1.16.0
 sklearn==0.0
 smart-open==5.2.1
