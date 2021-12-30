@@ -194,7 +194,7 @@ psutil==5.8.0
 ptyprocess==0.7.0
 py==1.10.0
 pyarrow==6.0.1
-pycodestyle==2.6.0
+pycodestyle
 pycosat==0.6.3
 pycparser==2.21
 pycurl==7.44.1
