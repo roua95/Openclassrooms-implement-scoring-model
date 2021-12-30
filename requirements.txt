@@ -48,7 +48,7 @@ colourmap==0.1.1
 comtypes==1.1.10
 conda
 conda-build
-conda-content-trust==0+unknown
+conda-content-trust
 conda-package-handling
 conda-repo-cli
 conda-token
