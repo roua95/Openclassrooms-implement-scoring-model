@@ -212,7 +212,7 @@ pyls-spyder==0.3.2
 Pympler==0.9
 PyNaCl==1.4.0
 pyngrok==5.1.0
-pyodbc==4.0.0-unsupported
+pyodbc
 pyOpenSSL==21.0.0
 pyparsing==3.0.4
 PyQt5==5.15.6
