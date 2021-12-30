@@ -1,8 +1,5 @@
 alabaster==0.7.12
 altair
-anaconda-client
-anaconda-navigator
-anaconda-project
 anyio
 appdirs
 argh
