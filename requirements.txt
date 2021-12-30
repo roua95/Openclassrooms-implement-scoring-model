@@ -49,9 +49,6 @@ comtypes==1.1.10
 conda
 conda-build
 conda-content-trust
-conda-repo-cli
-conda-token
-conda-verify
 contextlib2==0.6.0.post1
 cryptography==3.4.8
 cvxpy==1.1.17
