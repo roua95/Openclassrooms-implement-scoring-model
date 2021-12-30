@@ -1,5 +1,4 @@
 alabaster 
-anaconda-project 
 anyio 
 appdirs 
 argh 
