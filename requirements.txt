@@ -11,3 +11,4 @@ imblearn
 joblib
 pydantic
 google
+gunicorn
