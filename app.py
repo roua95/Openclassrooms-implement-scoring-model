@@ -4,7 +4,12 @@ from fastapi import FastAPI,Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
+import pandas as pd
 import json
+
+#load dataframe
+path = r'C:\Users\ROUA\OneDrive\Bureau\openclassrooms\P7\HomeCredit\application_train.csv'
+df = pd.read_csv(path,on_bad_lines='skip')
 
 class Client(BaseModel):
     AMT_ANNUITY: float
@@ -54,10 +59,10 @@ def get_model_decision(data: Client):
     return {'prediction': pred_name}
 
 
-@app.get('/predict/{request}')
-def get_model_decision_from_id(request: Request):
-    data = request.json()
-    pred_name = model.predict(data).tolist()[0]
+@app.get('/predict/{{idd}}')
+def get_model_decision_from_id(idd: int):
+    requested_client = df[df.SK_ID_CURR == idd]
+    pred_name = model.predict(requested_client).tolist()[0]
     return {'prediction': pred_name}
 
 
