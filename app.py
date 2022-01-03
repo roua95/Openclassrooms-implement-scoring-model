@@ -1,6 +1,6 @@
 import uvicorn
 import lightgbm as lgb
-from fastapi import FastAPI
+from fastapi import FastAPI,Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
@@ -53,10 +53,13 @@ def get_model_decision(data: Client):
     pred_name = model.predict([[AMT_ANNUITY, EXT_SOURCES_MAX]]).tolist()[0]
     return {'prediction': pred_name}
 
-@app.get('/predict/{data}')
-def get_model_decision_from_id(data: json):
+
+@app.get('/predict/{request}')
+def get_model_decision_from_id(request: Request):
+    data = request.json()
     pred_name = model.predict(data).tolist()[0]
     return {'prediction': pred_name}
+
 
 if __name__ == '__main__':
     uvicorn.run(app, host='127.0.0.1', port=4000, debug=True)
