@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
-
+import json
 
 class Client(BaseModel):
     AMT_ANNUITY: float
@@ -40,20 +40,23 @@ def index():
     return {'message': 'This is the homepage of the API '}
 
 
-@app.get('/client/{id}')
+@app.get('/client/{idd}')
 def get_client_id(idd: int):
     return {'message': f'Hello! @{idd}'}
 
 
-"""@app.get('/prediction')
+@app.get('/prediction')
 def get_model_decision(data: Client):
     received = data.dict()
     AMT_ANNUITY = received['AMT_ANNUITY']
     EXT_SOURCES_MAX = received['EXT_SOURCES_MAX']
     pred_name = model.predict([[AMT_ANNUITY, EXT_SOURCES_MAX]]).tolist()[0]
-    return {'prediction': pred_name}"""
+    return {'prediction': pred_name}
 
-
+@app.get('/predict/{data}')
+def get_model_decision_from_id(data: json):
+    pred_name = model.predict(data).tolist()[0]
+    return {'prediction': pred_name}
 
 if __name__ == '__main__':
     uvicorn.run(app, host='127.0.0.1', port=4000, debug=True)
