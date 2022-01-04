@@ -5,12 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
 import pandas as pd
-import json
+import joblib
 
 #load dataframe
-path = r'C:\Users\ROUA\OneDrive\Bureau\openclassrooms\P7\HomeCredit\application_train.csv'
+path = r'C:\Users\ROUA\OneDrive\Bureau\openclassrooms\P7\HomeCredit\df.csv'
 df = pd.read_csv(path,on_bad_lines='skip')
-
+print(df.shape)
 class Client(BaseModel):
     AMT_ANNUITY: float
     EXT_SOURCES_MAX: float
@@ -34,9 +34,9 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-# with open("./model.dat", "rb") as f:
+#with open("./model (4).pkl", "rb") as f:
 
-#    model = pickle.load(f)
+#   model = joblib.load(f)
 model = lgb.Booster(model_file='model.txt')
 
 
@@ -59,10 +59,11 @@ def get_model_decision(data: Client):
     return {'prediction': pred_name}
 
 
-@app.get('/predict/{{idd}}')
+@app.get('/predict/{idd}')
 def get_model_decision_from_id(idd: int):
     requested_client = df[df.SK_ID_CURR == idd]
-    pred_name = model.predict(requested_client).tolist()[0]
+    pred_name = model.predict(requested_client,predict_disable_shape_check=True).tolist()[0]
+    print(str(requested_client))
     return {'prediction': pred_name}
 
 
