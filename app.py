@@ -8,8 +8,11 @@ import pandas as pd
 import joblib
 
 #load dataframe
-path = 'https://drive.google.com/drive/folders/101YQZ4BFV5K99VN2ZCfOCf22ID2U3Bh2?usp=sharing'
-df = pd.read_csv(path+'/df.csv',on_bad_lines='skip')
+url='https://drive.google.com/file/d/1fK0EPuQys4fxwe50FBnZ175JvMQf4lrs/view?usp=sharing'
+url=url='https://drive.google.com/uc?id=' + url.split('/')[-2]
+
+df = pd.read_csv(url,on_bad_lines='skip')
+print(df.head(1))
 print(df.shape)
 class Client(BaseModel):
     AMT_ANNUITY: float
