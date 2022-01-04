@@ -8,8 +8,8 @@ import pandas as pd
 import joblib
 
 #load dataframe
-path = r'C:\Users\ROUA\OneDrive\Bureau\openclassrooms\P7\HomeCredit\df.csv'
-df = pd.read_csv(path,on_bad_lines='skip')
+path = 'https://drive.google.com/drive/folders/101YQZ4BFV5K99VN2ZCfOCf22ID2U3Bh2?usp=sharing'
+df = pd.read_csv(path+'/df.csv',on_bad_lines='skip')
 print(df.shape)
 class Client(BaseModel):
     AMT_ANNUITY: float
