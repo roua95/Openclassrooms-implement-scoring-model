@@ -12,5 +12,3 @@ joblib
 pydantic
 google
 gunicorn
-shap
-matplotlib

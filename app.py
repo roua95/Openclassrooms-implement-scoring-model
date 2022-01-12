@@ -1,13 +1,12 @@
 import uvicorn
 import lightgbm as lgb
-from fastapi import FastAPI,Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
 import pandas as pd
-import shap
-import matplotlib.pyplot as plt
-from IPython.display import HTML
+
+
 
 #load dataframe
 url='https://drive.google.com/file/d/1fK0EPuQys4fxwe50FBnZ175JvMQf4lrs/view?usp=sharing'
