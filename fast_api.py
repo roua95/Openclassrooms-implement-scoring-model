@@ -16,14 +16,9 @@ De plus, les chargés de relation client ont fait remonter le fait que les clien
 
 Prêt à dépenser décide donc de développer un dashboard interactif pour que les chargés de relation client puissent à la fois expliquer de façon la plus transparente possible les décisions d’octroi de crédit, mais également permettre à leurs clients de disposer de leurs informations personnelles et de les explorer facilement.
 """
+
+
 """# Import des données + feature engineering"""
-
-# Commented out IPython magic to ensure Python compatibility.
-from google.colab import drive
-
-drive.mount('/gdrive')
-# %cd /gdrive/My\ Drive/HomeCredit
-
 """
 KAGGLE HOME CREDIT DEFAULT RISK COMPETITION
 Adapted from one of the models used in 7th place solution ensemble.
@@ -55,34 +50,30 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.metrics import roc_auc_score
 import warnings
-
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-
-def main(debug=False):
+def main(debug= False):
     global df
+    path='https://drive.google.com/drive/folders/101YQZ4BFV5K99VN2ZCfOCf22ID2U3Bh2?usp=sharing'
     num_rows = 100 if debug else None
     with timer("application_train and application_test"):
-        df = get_train_test(DATA_DIRECTORY, num_rows=num_rows)
+        df = get_train_test(DATA_DIRECTORY, num_rows= num_rows)
         print("Application dataframe shape: ", df.shape)
     with timer("Bureau and bureau_balance data"):
-        bureau_df = get_bureau(DATA_DIRECTORY, num_rows=num_rows)
+        bureau_df = get_bureau(DATA_DIRECTORY, num_rows= num_rows)
         df = pd.merge(df, bureau_df, on='SK_ID_CURR', how='left')
         print("Bureau dataframe shape: ", bureau_df.shape)
-        del bureau_df;
-        gc.collect()
+        del bureau_df; gc.collect()
     with timer("previous_application"):
         prev_df = get_previous_applications(DATA_DIRECTORY, num_rows)
         df = pd.merge(df, prev_df, on='SK_ID_CURR', how='left')
         print("Previous dataframe shape: ", prev_df.shape)
-        del prev_df;
-        gc.collect()
+        del prev_df; gc.collect()
     with timer("previous applications balances"):
         pos = get_pos_cash(DATA_DIRECTORY, num_rows)
         df = pd.merge(df, pos, on='SK_ID_CURR', how='left')
         print("Pos-cash dataframe shape: ", pos.shape)
-        del pos;
-        gc.collect()
+        del pos; gc.collect()
     ''' ins = get_installment_payments(DATA_DIRECTORY, num_rows)
         df = pd.merge(df, ins, on='SK_ID_CURR', how='left')
         print("Installments dataframe shape: ", ins.shape)
@@ -91,8 +82,7 @@ def main(debug=False):
     cc = get_credit_card(DATA_DIRECTORY, num_rows)
     df = pd.merge(df, cc, on='SK_ID_CURR', how='left')
     print("Credit card dataframe shape: ", cc.shape)
-    del cc;
-    gc.collect()
+    del cc; gc.collect()
     # Add ratios and groupby between different tables
     df = add_ratios_features(df)
     df = reduce_memory(df)
@@ -102,14 +92,13 @@ def main(debug=False):
         'ORGANIZATION_TYPE', 'WEEKDAY_APPR_PROCESS_START', 'NAME_TYPE_SUITE', 'WALLSMATERIAL_MODE']
     return df
 
-
 def add_ratios_features(df):
     # CREDIT TO INCOME RATIO
     df['BUREAU_INCOME_CREDIT_RATIO'] = df['BUREAU_AMT_CREDIT_SUM_MEAN'] / df['AMT_INCOME_TOTAL']
     df['BUREAU_ACTIVE_CREDIT_TO_INCOME_RATIO'] = df['BUREAU_ACTIVE_AMT_CREDIT_SUM_SUM'] / df['AMT_INCOME_TOTAL']
     # PREVIOUS TO CURRENT CREDIT RATIO
     df['CURRENT_TO_APPROVED_CREDIT_MEAN_RATIO'] = df['APPROVED_AMT_CREDIT_MEAN'] / df['AMT_CREDIT']
-
+       
     return df
 
 
@@ -118,19 +107,19 @@ def add_ratios_features(df):
 
 # ------------------------- APPLICATION PIPELINE -------------------------
 
-def get_train_test(path, num_rows=None):
+def get_train_test(path, num_rows = None):
     """ Process application_train.csv and application_test.csv and return a pandas dataframe. """
     num_rows = 2000
-    train = pd.read_csv(os.path.join(path, 'application_train.csv'), nrows=num_rows)
-    test = pd.read_csv(os.path.join(path, 'application_test.csv'), nrows=num_rows)
+    train = pd.read_csv(os.path.join(path, 'application_train.csv'),on_bad_lines='skip', nrows= num_rows)
+    test = pd.read_csv(os.path.join(path, 'application_test.csv'),on_bad_lines='skip', nrows= num_rows)
     df = train.append(test)
-    del train, test;
-    gc.collect()
+    del train, test; gc.collect()
     # Data cleaning
     df = df[df['CODE_GENDER'] != 'XNA']  # 4 people with XNA code gender
     df = df[df['AMT_INCOME_TOTAL'] < 20000000]  # Max income in test is 4M; train has a 117M value
     df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)
     df['DAYS_LAST_PHONE_CHANGE'].replace(0, np.nan, inplace=True)
+
 
     # Categorical age - based on target=1 plot
     df['AGE_RANGE'] = df['DAYS_BIRTH'].apply(lambda x: get_age_label(x))
@@ -142,7 +131,7 @@ def get_train_test(path, num_rows=None):
     for function_name in ['min', 'max', 'mean', 'nanmedian', 'var']:
         feature_name = 'EXT_SOURCES_{}'.format(function_name.upper())
         df[feature_name] = eval('np.{}'.format(function_name))(
-            df[['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']], axis=1)
+        df[['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']], axis=1)
     # Credit ratios
     df['CREDIT_TO_ANNUITY_RATIO'] = df['AMT_CREDIT'] / df['AMT_ANNUITY']
     df['CREDIT_TO_GOODS_RATIO'] = df['AMT_CREDIT'] / df['AMT_GOODS_PRICE']
@@ -176,12 +165,12 @@ def drop_application_columns(df):
         'FLAG_EMP_PHONE', 'FLAG_MOBIL', 'FLAG_CONT_MOBILE', 'FLAG_EMAIL', 'FLAG_PHONE',
         'FLAG_OWN_REALTY', 'REG_REGION_NOT_LIVE_REGION', 'REG_REGION_NOT_WORK_REGION',
         'REG_CITY_NOT_WORK_CITY', 'OBS_30_CNT_SOCIAL_CIRCLE', 'OBS_60_CNT_SOCIAL_CIRCLE',
-        'AMT_REQ_CREDIT_BUREAU_DAY', 'AMT_REQ_CREDIT_BUREAU_MON', 'AMT_REQ_CREDIT_BUREAU_YEAR',
+        'AMT_REQ_CREDIT_BUREAU_DAY', 'AMT_REQ_CREDIT_BUREAU_MON', 'AMT_REQ_CREDIT_BUREAU_YEAR', 
         'COMMONAREA_MODE', 'NONLIVINGAREA_MODE', 'ELEVATORS_MODE', 'NONLIVINGAREA_AVG',
         'FLOORSMIN_MEDI', 'LANDAREA_MODE', 'NONLIVINGAREA_MEDI', 'LIVINGAPARTMENTS_MODE',
         'FLOORSMIN_AVG', 'LANDAREA_AVG', 'FLOORSMIN_MODE', 'LANDAREA_MEDI',
         'COMMONAREA_MEDI', 'YEARS_BUILD_AVG', 'COMMONAREA_AVG', 'BASEMENTAREA_AVG',
-        'BASEMENTAREA_MODE', 'NONLIVINGAPARTMENTS_MEDI', 'BASEMENTAREA_MEDI',
+        'BASEMENTAREA_MODE', 'NONLIVINGAPARTMENTS_MEDI', 'BASEMENTAREA_MEDI', 
         'LIVINGAPARTMENTS_AVG', 'ELEVATORS_AVG', 'YEARS_BUILD_MEDI', 'ENTRANCES_MODE',
         'NONLIVINGAPARTMENTS_MODE', 'LIVINGAREA_MODE', 'LIVINGAPARTMENTS_MEDI',
         'YEARS_BUILD_MODE', 'YEARS_BEGINEXPLUATATION_AVG', 'ELEVATORS_MEDI', 'LIVINGAREA_MEDI',
@@ -189,7 +178,7 @@ def drop_application_columns(df):
         'FONDKAPREMONT_MODE', 'EMERGENCYSTATE_MODE'
     ]
     # Drop most flag document columns
-    for doc_num in [2, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21]:
+    for doc_num in [2,4,5,6,7,9,10,11,12,13,14,15,16,17,19,20,21]:
         drop_list.append('FLAG_DOCUMENT_{}'.format(doc_num))
     df.drop(drop_list, axis=1, inplace=True)
     return df
@@ -198,25 +187,19 @@ def drop_application_columns(df):
 def get_age_label(days_birth):
     """ Return the age group label (int). """
     age_years = -days_birth / 365
-    if age_years < 27:
-        return 1
-    elif age_years < 40:
-        return 2
-    elif age_years < 50:
-        return 3
-    elif age_years < 65:
-        return 4
-    elif age_years < 99:
-        return 5
-    else:
-        return 0
+    if age_years < 27: return 1
+    elif age_years < 40: return 2
+    elif age_years < 50: return 3
+    elif age_years < 65: return 4
+    elif age_years < 99: return 5
+    else: return 0
 
 
 # ------------------------- BUREAU PIPELINE -------------------------
 
-def get_bureau(path, num_rows=None):
+def get_bureau(path, num_rows= None):
     """ Process bureau.csv and bureau_balance.csv and return a pandas dataframe. """
-    bureau = pd.read_csv(os.path.join(path, 'bureau.csv'), nrows=num_rows)
+    bureau = pd.read_csv(os.path.join(path, 'bureau.csv'), nrows= num_rows)
     # Credit duration and credit/account end date difference
     bureau['CREDIT_DURATION'] = -bureau['DAYS_CREDIT'] + bureau['DAYS_CREDIT_ENDDATE']
     bureau['ENDDATE_DIF'] = bureau['DAYS_CREDIT_ENDDATE'] - bureau['DAYS_ENDDATE_FACT']
@@ -226,46 +209,42 @@ def get_bureau(path, num_rows=None):
     bureau['CREDIT_TO_ANNUITY_RATIO'] = bureau['AMT_CREDIT_SUM'] / bureau['AMT_ANNUITY']
 
     # One-hot encoder
-    bureau, categorical_cols = one_hot_encoder(bureau, nan_as_category=False)
+    bureau, categorical_cols = one_hot_encoder(bureau, nan_as_category= False)
     # Join bureau balance features
     bureau = bureau.merge(get_bureau_balance(path, num_rows), how='left', on='SK_ID_BUREAU')
     # Flag months with late payments (days past due)
     bureau['STATUS_12345'] = 0
-    for i in range(1, 6):
+    for i in range(1,6):
         bureau['STATUS_12345'] += bureau['STATUS_{}'.format(i)]
 
     # Aggregate by number of months in balance and merge with bureau (loan length agg)
     features = ['AMT_CREDIT_MAX_OVERDUE', 'AMT_CREDIT_SUM_OVERDUE', 'AMT_CREDIT_SUM',
-                'AMT_CREDIT_SUM_DEBT', 'DEBT_PERCENTAGE', 'DEBT_CREDIT_DIFF', 'STATUS_0', 'STATUS_12345']
+        'AMT_CREDIT_SUM_DEBT', 'DEBT_PERCENTAGE', 'DEBT_CREDIT_DIFF', 'STATUS_0', 'STATUS_12345']
     agg_length = bureau.groupby('MONTHS_BALANCE_SIZE')[features].mean().reset_index()
     agg_length.rename({feat: 'LL_' + feat for feat in features}, axis=1, inplace=True)
     bureau = bureau.merge(agg_length, how='left', on='MONTHS_BALANCE_SIZE')
-    del agg_length;
-    gc.collect()
+    del agg_length; gc.collect()
 
     # General loans aggregations
     agg_bureau = group(bureau, 'BUREAU_', BUREAU_AGG)
     # Active and closed loans aggregations
     active = bureau[bureau['CREDIT_ACTIVE_Active'] == 1]
-    agg_bureau = group_and_merge(active, agg_bureau, 'BUREAU_ACTIVE_', BUREAU_ACTIVE_AGG)
+    agg_bureau = group_and_merge(active,agg_bureau,'BUREAU_ACTIVE_',BUREAU_ACTIVE_AGG)
     closed = bureau[bureau['CREDIT_ACTIVE_Closed'] == 1]
-    agg_bureau = group_and_merge(closed, agg_bureau, 'BUREAU_CLOSED_', BUREAU_CLOSED_AGG)
-    del active, closed;
-    gc.collect()
+    agg_bureau = group_and_merge(closed,agg_bureau,'BUREAU_CLOSED_',BUREAU_CLOSED_AGG)
+    del active, closed; gc.collect()
     # Aggregations for the main loan types
     for credit_type in ['Consumer credit', 'Credit card', 'Mortgage', 'Car loan', 'Microloan']:
         type_df = bureau[bureau['CREDIT_TYPE_' + credit_type] == 1]
         prefix = 'BUREAU_' + credit_type.split(' ')[0].upper() + '_'
         agg_bureau = group_and_merge(type_df, agg_bureau, prefix, BUREAU_LOAN_TYPE_AGG)
-        del type_df;
-        gc.collect()
+        del type_df; gc.collect()
     # Time based aggregations: last x months
     for time_frame in [6, 12]:
         prefix = "BUREAU_LAST{}M_".format(time_frame)
-        time_frame_df = bureau[bureau['DAYS_CREDIT'] >= -30 * time_frame]
+        time_frame_df = bureau[bureau['DAYS_CREDIT'] >= -30*time_frame]
         agg_bureau = group_and_merge(time_frame_df, agg_bureau, prefix, BUREAU_TIME_AGG)
-        del time_frame_df;
-        gc.collect()
+        del time_frame_df; gc.collect()
 
     # Last loan max overdue
     sort_bureau = bureau.sort_values(by=['DAYS_CREDIT'])
@@ -274,47 +253,45 @@ def get_bureau(path, num_rows=None):
     agg_bureau = agg_bureau.merge(gr, on='SK_ID_CURR', how='left')
     # Ratios: total debt/total credit and active loans debt/ active loans credit
     agg_bureau['BUREAU_DEBT_OVER_CREDIT'] = \
-        agg_bureau['BUREAU_AMT_CREDIT_SUM_DEBT_SUM'] / agg_bureau['BUREAU_AMT_CREDIT_SUM_SUM']
+        agg_bureau['BUREAU_AMT_CREDIT_SUM_DEBT_SUM']/agg_bureau['BUREAU_AMT_CREDIT_SUM_SUM']
     agg_bureau['BUREAU_ACTIVE_DEBT_OVER_CREDIT'] = \
-        agg_bureau['BUREAU_ACTIVE_AMT_CREDIT_SUM_DEBT_SUM'] / agg_bureau['BUREAU_ACTIVE_AMT_CREDIT_SUM_SUM']
+        agg_bureau['BUREAU_ACTIVE_AMT_CREDIT_SUM_DEBT_SUM']/agg_bureau['BUREAU_ACTIVE_AMT_CREDIT_SUM_SUM']
     return agg_bureau
 
 
-def get_bureau_balance(path, num_rows=None):
-    bb = pd.read_csv(os.path.join(path, 'bureau_balance.csv'), nrows=num_rows)
-    bb, categorical_cols = one_hot_encoder(bb, nan_as_category=False)
+def get_bureau_balance(path, num_rows= None):
+    bb = pd.read_csv(os.path.join(path, 'bureau_balance.csv'), nrows= num_rows)
+    bb, categorical_cols = one_hot_encoder(bb, nan_as_category= False)
     # Calculate rate for each category with decay
     bb_processed = bb.groupby('SK_ID_BUREAU')[categorical_cols].mean().reset_index()
     # Min, Max, Count and mean duration of payments (months)
     agg = {'MONTHS_BALANCE': ['min', 'max', 'mean', 'size']}
     bb_processed = group_and_merge(bb, bb_processed, '', agg, 'SK_ID_BUREAU')
-    del bb;
-    gc.collect()
+    del bb; gc.collect()
     return bb_processed
-
 
 # ------------------------- PREVIOUS PIPELINE -------------------------
 
-def get_previous_applications(path, num_rows=None):
+def get_previous_applications(path, num_rows= None):
     """ Process previous_application.csv and return a pandas dataframe. """
-    prev = pd.read_csv(os.path.join(path, 'previous_application.csv'), nrows=num_rows)
-    pay = pd.read_csv(os.path.join(path, 'installments_payments.csv'), nrows=num_rows)
+    prev = pd.read_csv(os.path.join(path, 'previous_application.csv'), nrows= num_rows)
+    pay = pd.read_csv(os.path.join(path, 'installments_payments.csv'), nrows= num_rows)
 
     # One-hot encode most important categorical features
     ohe_columns = [
         'NAME_CONTRACT_STATUS', 'NAME_CONTRACT_TYPE', 'CHANNEL_TYPE',
         'NAME_TYPE_SUITE', 'NAME_YIELD_GROUP', 'PRODUCT_COMBINATION',
         'NAME_PRODUCT_TYPE', 'NAME_CLIENT_TYPE']
-    prev, categorical_cols = one_hot_encoder(prev, ohe_columns, nan_as_category=False)
+    prev, categorical_cols = one_hot_encoder(prev, ohe_columns, nan_as_category= False)
 
     # Feature engineering: ratios and difference
     prev['APPLICATION_CREDIT_DIFF'] = prev['AMT_APPLICATION'] - prev['AMT_CREDIT']
     prev['APPLICATION_CREDIT_RATIO'] = prev['AMT_APPLICATION'] / prev['AMT_CREDIT']
-    prev['CREDIT_TO_ANNUITY_RATIO'] = prev['AMT_CREDIT'] / prev['AMT_ANNUITY']
+    prev['CREDIT_TO_ANNUITY_RATIO'] = prev['AMT_CREDIT']/prev['AMT_ANNUITY']
     prev['DOWN_PAYMENT_TO_CREDIT'] = prev['AMT_DOWN_PAYMENT'] / prev['AMT_CREDIT']
     # Interest ratio on previous application (simplified)
     total_payment = prev['AMT_ANNUITY'] * prev['CNT_PAYMENT']
-    prev['SIMPLE_INTERESTS'] = (total_payment / prev['AMT_CREDIT'] - 1) / prev['CNT_PAYMENT']
+    prev['SIMPLE_INTERESTS'] = (total_payment/prev['AMT_CREDIT'] - 1)/prev['CNT_PAYMENT']
 
     # Active loans - approved and not complete yet (last_due 365243)
     approved = prev[prev['NAME_CONTRACT_STATUS_Approved'] == 1]
@@ -322,26 +299,25 @@ def get_previous_applications(path, num_rows=None):
     # Find how much was already payed in active loans (using installments csv)
     active_pay = pay[pay['SK_ID_PREV'].isin(active_df['SK_ID_PREV'])]
     active_pay_agg = active_pay.groupby('SK_ID_PREV')[['AMT_INSTALMENT', 'AMT_PAYMENT']].sum()
-    active_pay_agg.reset_index(inplace=True)
+    active_pay_agg.reset_index(inplace= True)
     # Active loans: difference of what was payed and installments
     active_pay_agg['INSTALMENT_PAYMENT_DIFF'] = active_pay_agg['AMT_INSTALMENT'] - active_pay_agg['AMT_PAYMENT']
     # Merge with active_df
-    active_df = active_df.merge(active_pay_agg, on='SK_ID_PREV', how='left')
+    active_df = active_df.merge(active_pay_agg, on= 'SK_ID_PREV', how= 'left')
     active_df['REMAINING_DEBT'] = active_df['AMT_CREDIT'] - active_df['AMT_PAYMENT']
     active_df['REPAYMENT_RATIO'] = active_df['AMT_PAYMENT'] / active_df['AMT_CREDIT']
     # Perform aggregations for active applications
     active_agg_df = group(active_df, 'PREV_ACTIVE_', PREVIOUS_ACTIVE_AGG)
-    active_agg_df['TOTAL_REPAYMENT_RATIO'] = active_agg_df['PREV_ACTIVE_AMT_PAYMENT_SUM'] / \
+    active_agg_df['TOTAL_REPAYMENT_RATIO'] = active_agg_df['PREV_ACTIVE_AMT_PAYMENT_SUM']/\
                                              active_agg_df['PREV_ACTIVE_AMT_CREDIT_SUM']
-    del active_pay, active_pay_agg, active_df;
-    gc.collect()
+    del active_pay, active_pay_agg, active_df; gc.collect()
 
     # Change 365.243 values to nan (missing)
-    prev['DAYS_FIRST_DRAWING'].replace(365243, np.nan, inplace=True)
-    prev['DAYS_FIRST_DUE'].replace(365243, np.nan, inplace=True)
-    prev['DAYS_LAST_DUE_1ST_VERSION'].replace(365243, np.nan, inplace=True)
-    prev['DAYS_LAST_DUE'].replace(365243, np.nan, inplace=True)
-    prev['DAYS_TERMINATION'].replace(365243, np.nan, inplace=True)
+    prev['DAYS_FIRST_DRAWING'].replace(365243, np.nan, inplace= True)
+    prev['DAYS_FIRST_DUE'].replace(365243, np.nan, inplace= True)
+    prev['DAYS_LAST_DUE_1ST_VERSION'].replace(365243, np.nan, inplace= True)
+    prev['DAYS_LAST_DUE'].replace(365243, np.nan, inplace= True)
+    prev['DAYS_TERMINATION'].replace(365243, np.nan, inplace= True)
     # Days last due difference (scheduled x done)
     prev['DAYS_LAST_DUE_DIFF'] = prev['DAYS_LAST_DUE_1ST_VERSION'] - prev['DAYS_LAST_DUE']
     approved['DAYS_LAST_DUE_DIFF'] = approved['DAYS_LAST_DUE_1ST_VERSION'] - approved['DAYS_LAST_DUE']
@@ -352,21 +328,18 @@ def get_previous_applications(path, num_rows=None):
     agg_prev = group(prev, 'PREV_', {**PREVIOUS_AGG, **categorical_agg})
     # Merge active loans dataframe on agg_prev
     agg_prev = agg_prev.merge(active_agg_df, how='left', on='SK_ID_CURR')
-    del active_agg_df;
-    gc.collect()
+    del active_agg_df; gc.collect()
     # Aggregations for approved and refused loans
     agg_prev = group_and_merge(approved, agg_prev, 'APPROVED_', PREVIOUS_APPROVED_AGG)
     refused = prev[prev['NAME_CONTRACT_STATUS_Refused'] == 1]
     agg_prev = group_and_merge(refused, agg_prev, 'REFUSED_', PREVIOUS_REFUSED_AGG)
-    del approved, refused;
-    gc.collect()
+    del approved, refused; gc.collect()
     # Aggregations for Consumer loans and Cash loans
     for loan_type in ['Consumer loans', 'Cash loans']:
         type_df = prev[prev['NAME_CONTRACT_TYPE_{}'.format(loan_type)] == 1]
         prefix = 'PREV_' + loan_type.split(" ")[0] + '_'
         agg_prev = group_and_merge(type_df, agg_prev, prefix, PREVIOUS_LOAN_TYPE_AGG)
-        del type_df;
-        gc.collect()
+        del type_df; gc.collect()
 
     # Get the SK_ID_PREV for loans with late payments (days past due)
     pay['LATE_PAYMENT'] = pay['DAYS_ENTRY_PAYMENT'] - pay['DAYS_INSTALMENT']
@@ -374,27 +347,23 @@ def get_previous_applications(path, num_rows=None):
     dpd_id = pay[pay['LATE_PAYMENT'] > 0]['SK_ID_PREV'].unique()
     # Aggregations for loans with late payments
     agg_dpd = group_and_merge(prev[prev['SK_ID_PREV'].isin(dpd_id)], agg_prev,
-                              'PREV_LATE_', PREVIOUS_LATE_PAYMENTS_AGG)
-    del agg_dpd, dpd_id;
-    gc.collect()
+                                    'PREV_LATE_', PREVIOUS_LATE_PAYMENTS_AGG)
+    del agg_dpd, dpd_id; gc.collect()
     # Aggregations for loans in the last x months
     for time_frame in [12, 24]:
-        time_frame_df = prev[prev['DAYS_DECISION'] >= -30 * time_frame]
+        time_frame_df = prev[prev['DAYS_DECISION'] >= -30*time_frame]
         prefix = 'PREV_LAST{}M_'.format(time_frame)
         agg_prev = group_and_merge(time_frame_df, agg_prev, prefix, PREVIOUS_TIME_AGG)
-        del time_frame_df;
-        gc.collect()
-    del prev;
-    gc.collect()
+        del time_frame_df; gc.collect()
+    del prev; gc.collect()
     return agg_prev
-
 
 # ------------------------- POS-CASH PIPELINE -------------------------
 
-def get_pos_cash(path, num_rows=None):
+def get_pos_cash(path, num_rows= None):
     """ Process POS_CASH_balance.csv and return a pandas dataframe. """
-    pos = pd.read_csv(os.path.join(path, 'POS_CASH_balance.csv'), nrows=num_rows)
-    pos, categorical_cols = one_hot_encoder(pos, nan_as_category=False)
+    pos = pd.read_csv(os.path.join(path, 'POS_CASH_balance.csv'), nrows= num_rows)
+    pos, categorical_cols = one_hot_encoder(pos, nan_as_category= False)
     # Flag months with late payment
     pos['LATE_PAYMENT'] = pos['SK_DPD'].apply(lambda x: 1 if x > 0 else 0)
     # Aggregate by SK_ID_CURR
@@ -410,16 +379,15 @@ def get_pos_cash(path, num_rows=None):
     df['POS_LOAN_COMPLETED_MEAN'] = gp['NAME_CONTRACT_STATUS_Completed'].mean()
     df['POS_COMPLETED_BEFORE_MEAN'] = gp['CNT_INSTALMENT'].first() - gp['CNT_INSTALMENT'].last()
     df['POS_COMPLETED_BEFORE_MEAN'] = df.apply(lambda x: 1 if x['POS_COMPLETED_BEFORE_MEAN'] > 0
-                                                              and x['POS_LOAN_COMPLETED_MEAN'] > 0 else 0, axis=1)
+                                                and x['POS_LOAN_COMPLETED_MEAN'] > 0 else 0, axis=1)
     # Number of remaining installments (future installments) and percentage from total
     df['POS_REMAINING_INSTALMENTS'] = gp['CNT_INSTALMENT_FUTURE'].last()
-    df['POS_REMAINING_INSTALMENTS_RATIO'] = gp['CNT_INSTALMENT_FUTURE'].last() / gp['CNT_INSTALMENT'].last()
+    df['POS_REMAINING_INSTALMENTS_RATIO'] = gp['CNT_INSTALMENT_FUTURE'].last()/gp['CNT_INSTALMENT'].last()
     # Group by SK_ID_CURR and merge
     df_gp = df.groupby('SK_ID_CURR').sum().reset_index()
-    df_gp.drop(['MONTHS_BALANCE_MAX'], axis=1, inplace=True)
-    pos_agg = pd.merge(pos_agg, df_gp, on='SK_ID_CURR', how='left')
-    del df, gp, df_gp, sort_pos;
-    gc.collect()
+    df_gp.drop(['MONTHS_BALANCE_MAX'], axis=1, inplace= True)
+    pos_agg = pd.merge(pos_agg, df_gp, on= 'SK_ID_CURR', how= 'left')
+    del df, gp, df_gp, sort_pos; gc.collect()
 
     # Percentage of late payments for the 3 most recent applications
     pos = do_sum(pos, ['SK_ID_PREV'], 'LATE_PAYMENT', 'LATE_PAYMENT_SUM')
@@ -429,7 +397,7 @@ def get_pos_cash(path, num_rows=None):
     sort_pos = pos.sort_values(by=['SK_ID_PREV', 'MONTHS_BALANCE'])
     gp = sort_pos.iloc[last_month_df].groupby('SK_ID_CURR').tail(3)
     gp_mean = gp.groupby('SK_ID_CURR').mean().reset_index()
-    pos_agg = pd.merge(pos_agg, gp_mean[['SK_ID_CURR', 'LATE_PAYMENT_SUM']], on='SK_ID_CURR', how='left')
+    pos_agg = pd.merge(pos_agg, gp_mean[['SK_ID_CURR','LATE_PAYMENT_SUM']], on='SK_ID_CURR', how='left')
 
     # Drop some useless categorical features
     drop_features = [
@@ -438,12 +406,11 @@ def get_pos_cash(path, num_rows=None):
     pos_agg.drop(drop_features, axis=1, inplace=True)
     return pos_agg
 
-
 # ------------------------- INSTALLMENTS PIPELINE -------------------------
 
-def get_installment_payments(path, num_rows=None):
+def get_installment_payments(path, num_rows= None):
     """ Process installments_payments.csv and return a pandas dataframe. """
-    pay = pd.read_csv(os.path.join(path, 'installments_payments.csv'), nrows=num_rows)
+    pay = pd.read_csv(os.path.join(path, 'installments_payments.csv'), nrows= num_rows)
     # Group payments and get Payment difference
     pay = do_sum(pay, ['SK_ID_PREV', 'NUM_INSTALMENT_NUMBER'], 'AMT_PAYMENT', 'AMT_PAYMENT_GROUPED')
     pay['PAYMENT_DIFFERENCE'] = pay['AMT_INSTALMENT'] - pay['AMT_PAYMENT_GROUPED']
@@ -459,8 +426,7 @@ def get_installment_payments(path, num_rows=None):
     pay['LATE_PAYMENT'] = pay['DBD'].apply(lambda x: 1 if x > 0 else 0)
     # Percentage of payments that were late
     pay['INSTALMENT_PAYMENT_RATIO'] = pay['AMT_PAYMENT'] / pay['AMT_INSTALMENT']
-    pay['LATE_PAYMENT_RATIO'] = pay.apply(lambda x: x['INSTALMENT_PAYMENT_RATIO'] if x['LATE_PAYMENT'] == 1 else 0,
-                                          axis=1)
+    pay['LATE_PAYMENT_RATIO'] = pay.apply(lambda x: x['INSTALMENT_PAYMENT_RATIO'] if x['LATE_PAYMENT'] == 1 else 0, axis=1)
     # Flag late payments that have a significant amount
     pay['SIGNIFICANT_LATE_PAYMENT'] = pay['LATE_PAYMENT_RATIO'].apply(lambda x: 1 if x > 0.05 else 0)
     # Flag k threshold late payments
@@ -471,7 +437,7 @@ def get_installment_payments(path, num_rows=None):
 
     # Installments in the last x months
     for months in [36, 60]:
-        recent_prev_id = pay[pay['DAYS_INSTALMENT'] >= -30 * months]['SK_ID_PREV'].unique()
+        recent_prev_id = pay[pay['DAYS_INSTALMENT'] >= -30*months]['SK_ID_PREV'].unique()
         pay_recent = pay[pay['SK_ID_PREV'].isin(recent_prev_id)]
         prefix = 'INS_{}M_'.format(months)
         pay_agg = group_and_merge(pay_recent, pay_agg, prefix, INSTALLMENTS_TIME_AGG)
@@ -480,7 +446,7 @@ def get_installment_payments(path, num_rows=None):
     group_features = ['SK_ID_CURR', 'SK_ID_PREV', 'DPD', 'LATE_PAYMENT',
                       'PAID_OVER_AMOUNT', 'PAID_OVER', 'DAYS_INSTALMENT']
     gp = pay[group_features].groupby('SK_ID_CURR')
-    func = partial(trend_in_last_k_instalment_features, periods=INSTALLMENTS_LAST_K_TREND_PERIODS)
+    func = partial(trend_in_last_k_instalment_features, periods= INSTALLMENTS_LAST_K_TREND_PERIODS)
     g = parallel_apply(gp, func, index_name='SK_ID_CURR', chunk_size=10000).reset_index()
     pay_agg = pay_agg.merge(g, on='SK_ID_CURR', how='left')
 
@@ -498,9 +464,9 @@ def trend_in_last_k_instalment_features(gr, periods):
     for period in periods:
         gr_period = gr_.iloc[:period]
         features = add_trend_feature(features, gr_period, 'DPD',
-                                     '{}_TREND_'.format(period))
+                                           '{}_TREND_'.format(period))
         features = add_trend_feature(features, gr_period, 'PAID_OVER_AMOUNT',
-                                     '{}_TREND_'.format(period))
+                                           '{}_TREND_'.format(period))
     return features
 
 
@@ -525,12 +491,11 @@ def installments_last_loan_features(gr):
                                      'LAST_LOAN_')
     return features
 
-
 # ------------------------- CREDIT CARD PIPELINE -------------------------
 
-def get_credit_card(path, num_rows=None):
+def get_credit_card(path, num_rows= None):
     """ Process credit_card_balance.csv and return a pandas dataframe. """
-    cc = pd.read_csv(os.path.join(path, 'credit_card_balance.csv'), nrows=num_rows)
+    cc = pd.read_csv(os.path.join(path, 'credit_card_balance.csv'), nrows= num_rows)
     cc, cat_cols = one_hot_encoder(cc, nan_as_category=False)
     cc.rename(columns={'AMT_RECIVABLE': 'AMT_RECEIVABLE'}, inplace=True)
     # Amount used from limit
@@ -544,12 +509,12 @@ def get_credit_card(path, num_rows=None):
     # Aggregations by SK_ID_CURR
     cc_agg = cc.groupby('SK_ID_CURR').agg(CREDIT_CARD_AGG)
     cc_agg.columns = pd.Index(['CC_' + e[0] + "_" + e[1].upper() for e in cc_agg.columns.tolist()])
-    cc_agg.reset_index(inplace=True)
+    cc_agg.reset_index(inplace= True)
 
     # Last month balance of each credit card application
     last_ids = cc.groupby('SK_ID_PREV')['MONTHS_BALANCE'].idxmax()
     last_months_df = cc[cc.index.isin(last_ids)]
-    cc_agg = group_and_merge(last_months_df, cc_agg, 'CC_LAST_', {'AMT_BALANCE': ['mean', 'max']})
+    cc_agg = group_and_merge(last_months_df,cc_agg,'CC_LAST_', {'AMT_BALANCE': ['mean', 'max']})
 
     # Aggregations for last x months
     for months in [12, 24, 48]:
@@ -569,16 +534,16 @@ def timer(name):
     print("{} - done in {:.0f}s".format(name, time.time() - t0))
 
 
-def group(df_to_agg, prefix, aggregations, aggregate_by='SK_ID_CURR'):
+def group(df_to_agg, prefix, aggregations, aggregate_by= 'SK_ID_CURR'):
     agg_df = df_to_agg.groupby(aggregate_by).agg(aggregations)
     agg_df.columns = pd.Index(['{}{}_{}'.format(prefix, e[0], e[1].upper())
                                for e in agg_df.columns.tolist()])
     return agg_df.reset_index()
 
 
-def group_and_merge(df_to_agg, df_to_merge, prefix, aggregations, aggregate_by='SK_ID_CURR'):
-    agg_df = group(df_to_agg, prefix, aggregations, aggregate_by=aggregate_by)
-    return df_to_merge.merge(agg_df, how='left', on=aggregate_by)
+def group_and_merge(df_to_agg, df_to_merge, prefix, aggregations, aggregate_by= 'SK_ID_CURR'):
+    agg_df = group(df_to_agg, prefix, aggregations, aggregate_by= aggregate_by)
+    return df_to_merge.merge(agg_df, how='left', on= aggregate_by)
 
 
 def do_mean(df, group_cols, counted, agg_name):
@@ -648,8 +613,7 @@ def add_features(feature_name, aggs, features, feature_names, groupby):
             agg_func = agg
 
         g = groupby[feature_name].agg(agg_func).reset_index().rename(index=str,
-                                                                     columns={feature_name: '{}_{}'.format(feature_name,
-                                                                                                           agg)})
+                                                                     columns={feature_name: '{}_{}'.format(feature_name,agg)})
         features = features.merge(g, on='SK_ID_CURR', how='left')
     return features, feature_names
 
@@ -691,11 +655,10 @@ def add_trend_feature(features, gr, feature_name, prefix):
     features['{}{}'.format(prefix, feature_name)] = trend
     return features
 
-
-# funcction for parrallel threading
+#funcction for parrallel threading
 def parallel_apply(groups, func, index_name='Index', num_workers=0, chunk_size=100000):
     if num_workers <= 0: num_workers = NUM_THREADS
-    # n_chunks = np.ceil(1.0 * groups.ngroups / chunk_size)
+    #n_chunks = np.ceil(1.0 * groups.ngroups / chunk_size)
     indeces, features = [], []
     for index_chunk, groups_chunk in chunk_groups(groups, chunk_size):
         with mp.pool.Pool(num_workers) as executor:
@@ -754,16 +717,17 @@ def reduce_memory(df):
     print('Final memory usage is: {:.2f} MB - decreased by {:.1f}%'.format(end_mem, memory_reduction))
     return df
 
-
 # ------------------------- CONFIGURATIONS -------------------------
 
 # GENERAL CONFIGURATIONS
 NUM_THREADS = 4
-DATA_DIRECTORY = ""
+DATA_DIRECTORY = "https://drive.google.com/drive/folders/101YQZ4BFV5K99VN2ZCfOCf22ID2U3Bh2?usp=sharing"
 SUBMISSION_SUFIX = "_model2_04"
 
 # INSTALLMENTS TREND PERIODS
-INSTALLMENTS_LAST_K_TREND_PERIODS = [12, 24, 60, 120]
+INSTALLMENTS_LAST_K_TREND_PERIODS =  [12, 24, 60, 120]
+
+
 
 # AGGREGATIONS
 BUREAU_AGG = {
@@ -889,6 +853,7 @@ PREVIOUS_APPROVED_AGG = {
     'CREDIT_TO_ANNUITY_RATIO': ['mean', 'max'],
 }
 
+
 PREVIOUS_REFUSED_AGG = {
     'AMT_APPLICATION': ['max', 'mean'],
     'AMT_CREDIT': ['min', 'max'],
@@ -1005,36 +970,35 @@ CREDIT_CARD_TIME_AGG = {
     'LIMIT_USE': ['max', 'mean']
 }
 
+
 if __name__ == "__main__":
-    def my_score(y_pred, y_true):
+    def my_score(y_pred,y_true):
         tp = np.sum(y_pred * y_true, axis=0)
         fp = np.sum(y_pred * (1 - y_true), axis=0)
         fn = np.sum((1 - y_pred) * y_true, axis=0)
-        cost = 15 * fn + 5 * fp  # / (2*tp + fn + fp + 1e-16)
+        cost = 15*fn + 5*fp #/ (2*tp + fn + fp + 1e-16)
         return cost
-
-
     pd.set_option('display.max_rows', 60)
     pd.set_option('display.max_columns', 100)
     with timer("Pipeline total time"):
-        main(debug=False)
+        main(debug= False)
 
 """# Data preprocessing"""
 
-df1 = df
+df1=df
 
 df.dtypes
 
-df = df1
-df = df.astype('float')
+df=df1
+df =df.astype('float')
 test = df[df['TARGET'].isnull()]
 df = df[df['TARGET'].notnull()]
-df.fillna(df.mean(), inplace=True)
-df.replace(np.inf, 1000000, inplace=True)
+df.fillna(df.mean(),inplace=True)
+df.replace(np.inf, 1000000, inplace=True) 
 df.replace(-np.inf, -1, inplace=True)
 df.replace(np.nan, 0, inplace=True)
 
-# df =df[~df.isin([np.nan, np.inf, -np.inf]).any(1)]
+#df =df[~df.isin([np.nan, np.inf, -np.inf]).any(1)]
 
 print("printing column name where infinity is present")
 col_name = df.columns.to_series()[np.isnan(df).any()]
@@ -1046,28 +1010,29 @@ print(col_name)
 """
 
 from sklearn.preprocessing import StandardScaler
-from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split
 from collections import Counter
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.impute import SimpleImputer
+from imblearn.pipeline import make_pipeline
 
-scaler = StandardScaler()
+
+#scaler = StandardScaler()
 
 X, y = (df.drop(['SK_ID_CURR', 'TARGET'], axis=1),
-        df['TARGET'])
-X = X.fillna(X.mean())
-X = X.replace([np.inf, -np.inf], 1000)
+                df['TARGET'])
+X =X.fillna(X.mean())
+X = X.replace([np.inf, -np.inf], 1000) 
 print(df.describe())
 print(X.describe())
 
-oversample = SMOTE()
-X, y = oversample.fit_resample(X, y)
-# X= scaler.fit_transform(X)
+#X, y = oversample.fit_resample(X, y)
+#X= scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=314)
 
-# X_train = scaler.fit_transform(X_train)
-# X_test = scaler.transform (X_test)
+
+#X_train = scaler.fit_transform(X_train)
+#X_test = scaler.transform (X_test)
 '''
 rus = RandomUnderSampler(random_state=42, replacement=True)# fit predictor and target variable
 x_rus, y_rus = rus.fit_resample(X, y)
@@ -1081,89 +1046,95 @@ X_train, X_test, y_train, y_test = train_test_split(x_rus, y_rus, test_size=0.20
 
 from sklearn.metrics import make_scorer
 
-
-def my_score(y_pred, y_true):
+def my_score(y_pred,y_true):
     tp = np.sum(y_pred * y_true, axis=0)
     fp = np.sum(y_pred * (1 - y_true), axis=0)
     fn = np.sum((1 - y_pred) * y_true, axis=0)
-    cost = 15 * fn + 8 * fp - 5 * tp
+    cost = 15*fn + 8*fp - 5*tp
     return cost
-
-
 my_custom_score = make_scorer(my_score, greater_is_better=False)
+
+
 
 """# Application du modèle LightGBM et son optimisation"""
 
 import lightgbm as lgb
-
-fit_params = {"early_stopping_rounds": 10,
-              "eval_metric": 'logloss',
-              "eval_set": [(X_test, y_test)],
-              'eval_names': ['valid'],
-              # 'callbacks': [lgb.reset_parameter(learning_rate=learning_rate_010_decay_power_099)],
-              'verbose': 100,
-              'categorical_feature': 'auto'}
-
+from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 from scipy.stats import randint as sp_randint
 from scipy.stats import uniform as sp_uniform
+from imblearn.over_sampling import SMOTE
 
-param_test = {'num_leaves': sp_randint(6, 50),
-              'min_child_samples': sp_randint(100, 500),
-              'min_child_weight': [1e-5, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4],
-              'subsample': sp_uniform(loc=0.2, scale=0.8),
-              'colsample_bytree': sp_uniform(loc=0.4, scale=0.6),
-              'reg_alpha': [0, 1e-1, 1, 2, 5, 7, 10, 50, 100],
-              'reg_lambda': [0, 1e-1, 1, 5, 10, 20, 50, 100]}
+fit_params={"early_stopping_rounds":10, 
+            "eval_metric" : 'auc', 
+            "eval_set" : [(X_test,y_test)],
+            'eval_names': ['valid'],
+            #'callbacks': [lgb.reset_parameter(learning_rate=learning_rate_010_decay_power_099)],
+            'verbose': 100,
+            'categorical_feature': 'auto'}
 
-# This parameter defines the number of HP points to be tested
+param_test ={'lgbmclassifier__num_leaves': sp_randint(6, 50), 
+             'lgbmclassifier__min_child_samples': sp_randint(100, 500), 
+             'lgbmclassifier__min_child_weight': [1e-5, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4],
+             'lgbmclassifier__subsample': sp_uniform(loc=0.2, scale=0.8), 
+             'lgbmclassifier__colsample_bytree': sp_uniform(loc=0.4, scale=0.6),
+             'lgbmclassifier__reg_alpha': [0, 1e-1, 1, 2, 5, 7, 10, 50, 100],
+             'lgbmclassifier__reg_lambda': [0, 1e-1, 1, 5, 10, 20, 50, 100]}
+
+#This parameter defines the number of HP points to be tested
 n_HP_points_to_test = 30
 
-import lightgbm as lgb
-from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
+#n_estimators is set to a "large value". The actual number of trees build will depend on early stopping and 5000 define only the absolute maximum
+clf = lgb.LGBMClassifier( random_state=314)
+oversample = SMOTE(random_state=314)
+X_train, y_train = oversample.fit_resample(X_train, y_train)
 
-# n_estimators is set to a "large value". The actual number of trees build will depend on early stopping and 5000 define only the absolute maximum
-clf = lgb.LGBMClassifier(random_state=314)
+pipeline = make_pipeline(oversample, clf)
+
 gs = RandomizedSearchCV(
-    estimator=clf, param_distributions=param_test,
+    estimator=pipeline, param_distributions=param_test, 
     n_iter=n_HP_points_to_test,
     cv=3,
     scoring=my_custom_score,
     refit=True,
     random_state=314,
     verbose=True)
+print(pipeline.get_params().keys())
+gs.fit(X_train, y_train)#, **fit_params)
+y_pred = gs.predict(X_test)
 
-gs.fit(X_train, y_train, **fit_params)
-gs.predict(X_test)
+
 print('Best score reached: {} with params: {} '.format(gs.best_score_, gs.best_params_))
+
+from sklearn.metrics import classification_report
+print(classification_report(y_test, y_pred))
 
 print(gs.best_estimator_)
 
 from sklearn.utils.validation import check_is_fitted
-
 check_is_fitted(gs)
 
 from sklearn.metrics import plot_confusion_matrix
+plot_confusion_matrix(gs,X_test,y_test)
 
-plot_confusion_matrix(gs, X_test, y_test)
+from sklearn.metrics import accuracy_score,f1_score,recall_score
 
-from sklearn.metrics import accuracy_score, f1_score, recall_score
-
-gs_predict = gs.best_estimator_.predict(X_test)  # check performance
-print('ROCAUC score:', roc_auc_score(y_test, gs_predict))
-print('F1 score:', f1_score(y_test, gs_predict))
-print('recall : ', recall_score(y_test, gs_predict))
+gs_predict = gs.best_estimator_.predict(X_test)# check performance
+print('ROCAUC score:',roc_auc_score(y_test, gs_predict))
+print('F1 score:',f1_score(y_test, gs_predict))
+print('recall : ',recall_score(y_test, gs_predict))
 
 """# SVM"""
 
-from sklearn.metrics import accuracy_score, f1_score, recall_score
+from sklearn.metrics import accuracy_score,f1_score,recall_score
 from sklearn.svm import OneClassSVM
+
 
 # split into train/test sets
 trainX, testX, trainy, testy = train_test_split(X, y, test_size=0.5, random_state=2, stratify=y)
 # define outlier detection model
 model = OneClassSVM(gamma='scale', nu=0.01)
 # fit on majority class
-trainX = trainX[trainy == 0]
+trainX = trainX[trainy==0]
 model.fit(trainX)
 # detect outliers in the test set
 yhat = model.predict(testX)
@@ -1173,10 +1144,11 @@ testy[testy == 0] = 1
 # calculate score
 score = f1_score(testy, yhat, pos_label=-1)
 print('F1 Score: %.3f' % score)
-print('recall : ', recall_score(testy, yhat, average='weighted'))
-print('ROCAUC score:', roc_auc_score(testy, yhat))
+print('recall : ',recall_score(testy,yhat,average='weighted'))
+print('ROCAUC score:',roc_auc_score(testy,yhat))
 
-confusion_matrix(testy, yhat)
+from sklearn.metrics import confusion_matrix
+confusion_matrix(testy,yhat)
 
 """# Isolation Forest algorithm"""
 
@@ -1184,16 +1156,16 @@ from sklearn.ensemble import IsolationForest
 import numpy as np
 
 X, y = (df.drop(['SK_ID_CURR', 'TARGET'], axis=1),
-        df['TARGET'])
-X = X.fillna(X.mean())
-X = X.replace([np.inf, -np.inf], 1000)
+                df['TARGET'])
+X =X.fillna(X.mean())
+X = X.replace([np.inf, -np.inf], 1000) 
 
 # split into train/test sets
 trainX, testX, trainy, testy = train_test_split(X, y, test_size=0.5, random_state=2, stratify=y)
 # define outlier detection model
-model = IsolationForest(n_estimators=10, contamination=0.07)
+model = IsolationForest(n_estimators=10,contamination=0.07)
 # fit on majority class
-trainX = trainX[trainy == 0]
+trainX = trainX[trainy==0]
 model.fit(trainX)
 # detect outliers in the test set
 yhat = model.predict(testX)
@@ -1201,19 +1173,23 @@ yhat = model.predict(testX)
 testy[testy == 1] = -1
 testy[testy == 0] = 1
 # calculate score
-score = f1_score(testy, yhat, pos_label=-1, average='weighted')
+score = f1_score(testy, yhat, pos_label=-1,average='weighted')
 print('F1 Score: %.3f' % score)
-print('recall : ', recall_score(testy, yhat, average='weighted'))
-print('ROCAUC score:', roc_auc_score(testy, yhat))
+print('recall : ',recall_score(testy,yhat,average='weighted'))
+print('ROCAUC score:',roc_auc_score(testy,yhat))
 
-# from sklearn.metrics import
 from sklearn.metrics import confusion_matrix
 
-confusion_matrix(testy, yhat)
+confusion_matrix(testy,yhat)
+
+df.to_csv('df.csv')
 
 """# Choix de l'algorithme"""
 
-gs.best_estimator_.booster_.save_model('model1.txt')
+import joblib
+joblib.dump(gs, 'model.pkl')
+
+#gs.best_estimator_.booster_.save_model('model1.txt')
 
 '''from sklearn.pipeline import Pipeline
 import joblib
@@ -1229,3 +1205,5 @@ pipeline = make_pipeline(MinMaxScaler(),LGBMClassifier(colsample_bytree=0.950124
 model = pipeline.fit(X_train, y_train)
 joblib.dump(model, 'model.mod') 
 joblib.dump(gs.best_estimator_, 'model.pkl') '''
+
+

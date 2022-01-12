@@ -12,3 +12,4 @@ joblib
 pydantic
 google
 gunicorn
+shap
