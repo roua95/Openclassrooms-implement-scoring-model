@@ -49,20 +49,6 @@ def index():
     return {'message': 'This is the homepage of the API '}
 
 
-@app.get('/client/{idd}')
-def get_client_id(idd: int):
-    return {'message': f'Hello! @{idd}'}
-
-
-@app.get('/prediction')
-def get_model_decision(data: Client):
-    received = data.dict()
-    AMT_ANNUITY = received['AMT_ANNUITY']
-    EXT_SOURCES_MAX = received['EXT_SOURCES_MAX']
-    pred_name = model.predict([[AMT_ANNUITY, EXT_SOURCES_MAX]]).tolist()[0]
-    return {'prediction': pred_name}
-
-
 @app.get('/predict/{idd}')
 def get_model_decision_from_id(idd: int):
     requested_client = df[df.SK_ID_CURR == idd]
